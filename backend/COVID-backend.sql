@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS account_admins (
 
 CREATE TABLE IF NOT EXISTS account_admin_sessions (
 	account_admin_uuid VARCHAR(36) NOT NULL, -- account_admin_uuid of session
-	active BOOLEAN NOT NULL DEFAULT FALSE, -- Wether or not this session is active.
+	active BOOLEAN NOT NULL DEFAULT FALSE, -- Whether or not this session is active.
 	session_token VARCHAR(36) NOT NULL, -- Token used to identify a session.
 	begin_time TIMESTAMP NOT NULL DEFAULT NOW(), -- Time of session start.
 	expiration_time TIMESTAMP NOT NULL DEFAULT DATE_ADD(NOW(), INTERVAL 30 MINUTE), -- Timestamp after which a session naturally expires if it has not been used.
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS healthcare_workers (
 
 CREATE TABLE IF NOT EXISTS healthcare_worker_sessions (
 	healthcare_worker_uuid VARCHAR(36) NOT NULL, -- healthcare_worker_uuid of session
-	active BOOLEAN NOT NULL DEFAULT FALSE, -- Wether or not this session is active.
+	active BOOLEAN NOT NULL DEFAULT FALSE, -- Whether or not this session is active.
 	session_token VARCHAR(36) NOT NULL, -- Token used to identify a session.
 	begin_time TIMESTAMP NOT NULL DEFAULT NOW(), -- Time of session start.
 	expiration_time TIMESTAMP NOT NULL DEFAULT DATE_ADD(NOW(), INTERVAL 30 MINUTE), -- Timestamp after which a session naturally expires if it has not been used.
@@ -117,16 +117,16 @@ CREATE TABLE IF NOT EXISTS daily_tracing_key_activation_requests (
 	healthcare_worker_uuid VARCHAR(36) NOT NULL, -- UUID of healthcare_worker who made the activation request.
 	valid_until TIMESTAMP NOT NULL DEFAULT DATE_ADD(NOW(), INTERVAL 14 DAY), -- Expiration timestamp of the healthcare_worker's session.
 	request_token VARCHAR(36) NOT NULL, -- Single use token which can be used to submit daily_tracing_keys.
-	time_received TIMESTAMP NULL DEFAULT NULL, -- Time at which the daily_tracing_keys have been received.
+    creation_time TIMESTAMP NULL DEFAULT NOW(), -- Time at which the daily_tracing_keys have been created.
 	PRIMARY KEY (request_uuid),
 	KEY (request_uuid, healthcare_worker_uuid),
-	KEY (time_received),
+	KEY (creation_time),
 	FOREIGN KEY (healthcare_worker_uuid) REFERENCES healthcare_workers(healthcare_worker_uuid) ON UPDATE CASCADE ON DELETE NO ACTION
 );
 
 CREATE TABLE IF NOT EXISTS active_daily_tracing_keys (
 	request_uuid VARCHAR(36) NOT NULL, -- UUID of activation request.
-	interval_number UNSIGNED INTEGER NOT NULL, -- Day number belonging to the daily_tracing_key.
+	interval_number INTEGER UNSIGNED NOT NULL, -- Day number belonging to the daily_tracing_key.
 	daily_tracing_key BINARY(16) NOT NULL, -- daily_tracing_key.
 	PRIMARY KEY(request_uuid, interval_number, daily_tracing_key),
 	KEY (interval_number, daily_tracing_key),
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS retracted_daily_tracing_keys (
 	healthcare_worker_uuid VARCHAR(36) NOT NULL, -- uuid of the healthcare_worker who issued the retraction event.
 	activation_request_uuid VARCHAR(36) NULL, -- uuid of the activation request the retracted daily_tracing_key appeared in.
 	time_of_retraction TIMESTAMP NOT NULL DEFAULT NOW(), -- timestamp of when the retraction was issued.
-	interval_number UNSIGNED INTEGER NOT NULL, -- Day number belonging to the daily_tracing_key.
+	interval_number INTEGER UNSIGNED NOT NULL, -- Day number belonging to the daily_tracing_key.
 	daily_tracing_key BINARY(16) NOT NULL, -- daily_tracing_key.
 	PRIMARY KEY (retraction_uuid),
 	FOREIGN KEY (healthcare_worker_uuid) REFERENCES healthcare_workers(healthcare_worker_uuid) ON UPDATE CASCADE ON DELETE NO ACTION,
@@ -171,7 +171,7 @@ WHERE
 CREATE OR REPLACE VIEW view_daily_tracing_key_submitted_by_healthcare_workers AS
 SELECT
 	healthcare_workers.username AS username,
-	dtkars.time_received AS time_received,
+	dtkars.creation_time AS creation_time,
 	adtks.interval_number AS interval_number,
     adtks.daily_tracing_key AS daily_tracing_key
 FROM
@@ -199,3 +199,4 @@ WHERE
     healthcare_workers.reset_code IS NOT NULL AND
     healthcare_workers.active IS TRUE AND
 	healthcare_workers.account_expiration_date > NOW();
+
