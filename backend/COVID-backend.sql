@@ -153,16 +153,19 @@ CREATE TABLE IF NOT EXISTS retracted_daily_tracing_keys (
 CREATE OR REPLACE VIEW view_healthcare_workers_sessions AS
 SELECT 
 	healthcare_workers.healthcare_worker_uuid AS healthcare_worker_uuid,
-    healthcare_workers.username AS username,
-    healthcare_workers.active AS healthcare_worker_active,
-    healthcare_worker_sessions.active AS session_active,
-    healthcare_worker_sessions.begin_time AS session_begin_time,
-    healthcare_worker_sessions.expiration_time AS session_expiration_time
+    healthcare_worker_sessions.session_token AS session_token
 FROM
 	healthcare_workers, healthcare_worker_sessions
 WHERE
-	healthcare_workers.healthcare_worker_uuid = healthcare_worker_sessions.healthcare_worker_uuid;
-
+	healthcare_workers.healthcare_worker_uuid = healthcare_worker_sessions.healthcare_worker_uuid AND
+    healthcare_workers.totp_seed IS NOT NULL AND
+    healthcare_workers.email IS NOT NULL AND
+    healthcare_workers.phone_number IS NOT NULL AND
+    healthcare_workers.reset_code IS NOT NULL AND
+    healthcare_workers.active IS TRUE AND
+    healthcare_worker_sessions.expiration_time > NOW() AND
+    healthcare_workers.account_expiration_date > NOW();
+    
 -- View to show the healthcare_worker all daily_tracing_keys he or she has submitted.
 
 CREATE OR REPLACE VIEW view_daily_tracing_key_submitted_by_healthcare_workers AS
@@ -178,3 +181,21 @@ FROM
 WHERE
 	healthcare_workers.healthcare_worker_uuid = dtkars.healthcare_worker_uuid AND
     dtkars.request_uuid = adtks.request_uuid;
+
+-- View for the healthcare worker's login procedures
+
+CREATE OR REPLACE VIEW view_healthcare_workers_logins AS
+SELECT
+    healthcare_workers.healthcare_worker_uuid AS healthcare_worker_uuid,
+    healthcare_workers.username AS username,
+    healthcare_workers.hashed_password AS hashed_password,
+    healthcare_workers.totp_seed AS totp_seed
+FROM 
+	healthcare_workers
+WHERE
+    healthcare_workers.totp_seed IS NOT NULL AND
+    healthcare_workers.email IS NOT NULL AND
+    healthcare_workers.phone_number IS NOT NULL AND
+    healthcare_workers.reset_code IS NOT NULL AND
+    healthcare_workers.active IS TRUE AND
+	healthcare_workers.account_expiration_date > NOW();
