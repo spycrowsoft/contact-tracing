@@ -10,7 +10,7 @@
 DROP VIEW IF EXISTS view_daily_tracing_key_submitted_by_healthcare_workers;
 DROP VIEW IF EXISTS view_healthcare_workers_sessions;
 
-DROP TABLE IF EXISTS retracted_daily_tracing_keys;
+--	DROP TABLE IF EXISTS retracted_daily_tracing_keys;
 DROP TABLE IF EXISTS active_daily_tracing_keys;
 
 DROP TABLE IF EXISTS daily_tracing_key_activation_requests;
@@ -126,27 +126,29 @@ CREATE TABLE IF NOT EXISTS daily_tracing_key_activation_requests (
 );
 
 CREATE TABLE IF NOT EXISTS active_daily_tracing_keys (
+	daily_tracing_key_uuid VARCHAR(36) NOT NULL DEFAULT UUID(), -- UUID of the daily tracing key.
 	request_uuid VARCHAR(36) NOT NULL, -- UUID of activation request.
-	received TIMESTAMP NOT NULL DEFAULT NOW(), -- Time at which the daily_tracing_key has been received.	
+	submission_time TIMESTAMP NOT NULL DEFAULT NOW(), -- Time at which the daily_tracing_key has been received.	
 	interval_number INTEGER UNSIGNED NOT NULL, -- Day number belonging to the daily_tracing_key.
 	daily_tracing_key BINARY(16) NOT NULL, -- daily_tracing_key.
+	retraction_time TIMESTAMP NULL DEFAULT NULL, -- Set to NOW() when the key has been retracted.
 	PRIMARY KEY(request_uuid, interval_number, daily_tracing_key),
 	KEY (interval_number, daily_tracing_key),
 	FOREIGN KEY (request_uuid) REFERENCES daily_tracing_key_activation_requests(request_uuid) ON UPDATE CASCADE ON DELETE NO ACTION
 );
 
-CREATE TABLE IF NOT EXISTS retracted_daily_tracing_keys (
-	retraction_uuid VARCHAR(36) NOT NULL DEFAULT UUID(), -- uuid of the retraction-event.
-	healthcare_worker_uuid VARCHAR(36) NOT NULL, -- uuid of the healthcare_worker who issued the retraction event.
-	activation_request_uuid VARCHAR(36) NULL, -- uuid of the activation request the retracted daily_tracing_key appeared in.
-	time_of_retraction TIMESTAMP NOT NULL DEFAULT NOW(), -- timestamp of when the retraction was issued.
-	interval_number INTEGER UNSIGNED NOT NULL, -- Day number belonging to the daily_tracing_key.
-	daily_tracing_key BINARY(16) NOT NULL, -- daily_tracing_key.
-	PRIMARY KEY (retraction_uuid),
-	FOREIGN KEY (healthcare_worker_uuid) REFERENCES healthcare_workers(healthcare_worker_uuid) ON UPDATE CASCADE ON DELETE NO ACTION,
-	FOREIGN KEY (interval_number, daily_tracing_key) REFERENCES active_daily_tracing_keys(interval_number, daily_tracing_key) ON UPDATE CASCADE ON DELETE NO ACTION,
-	FOREIGN KEY (activation_request_uuid) REFERENCES active_daily_tracing_keys(request_uuid) ON UPDATE CASCADE ON DELETE NO ACTION
-);
+--	CREATE TABLE IF NOT EXISTS retracted_daily_tracing_keys (
+--	retraction_uuid VARCHAR(36) NOT NULL DEFAULT UUID(), -- uuid of the retraction-event.
+--	healthcare_worker_uuid VARCHAR(36) NOT NULL, -- uuid of the healthcare_worker who issued the retraction event.
+--	activation_request_uuid VARCHAR(36) NULL, -- uuid of the activation request the retracted daily_tracing_key appeared in.
+--	time_of_retraction TIMESTAMP NOT NULL DEFAULT NOW(), -- timestamp of when the retraction was issued.
+--	interval_number INTEGER UNSIGNED NOT NULL, -- Day number belonging to the daily_tracing_key.
+--	daily_tracing_key BINARY(16) NOT NULL, -- daily_tracing_key.
+--	PRIMARY KEY (retraction_uuid),
+--	FOREIGN KEY (healthcare_worker_uuid) REFERENCES healthcare_workers(healthcare_worker_uuid) ON UPDATE CASCADE ON DELETE NO ACTION,
+--	FOREIGN KEY (interval_number, daily_tracing_key) REFERENCES active_daily_tracing_keys(interval_number, daily_tracing_key) ON UPDATE CASCADE ON DELETE NO ACTION,
+--	FOREIGN KEY (activation_request_uuid) REFERENCES active_daily_tracing_keys(request_uuid) ON UPDATE CASCADE ON DELETE NO ACTION
+--	);
 
 --	Views for use by application.
 
@@ -177,14 +179,17 @@ SELECT
 	dtkars.healthcare_worker_uuid AS healthcare_worker_uuid,
 	dtkars.creation_time AS request_creation_time,
 	adtks.submission_time AS submission_time,
+	adtks.daily_tracing_key_uuid AS daily_tracing_key_uuid,
 	adtks.interval_number AS interval_number, 
-	adtks.daily_tracing_key AS daily_tracing_key
+	adtks.daily_tracing_key AS daily_tracing_key,
+	adtks.retraction_time AS retraction_time
 FROM
 	daily_tracing_key_activation_requests AS dtkars,
 	active_daily_tracing_keys AS adtks
 WHERE
-	dtkars.request_uuid = adtks.request_uuid,
-	dtkars.expiration_date > NOW();
+	dtkars.request_uuid = adtks.request_uuid
+	AND retraction_time IS NULL
+	AND dtkars.expiration_date > NOW();
 
 --	View for the healthcare worker's login procedures
 
@@ -206,7 +211,27 @@ WHERE
 	AND healthcare_workers.active IS TRUE
 	AND healthcare_workers.account_expiration_date > NOW();
 
---	View for all active keys
+--	View to export all active keys
+
+CREATE OR REPLACE VIEW view_active_keys AS
+SELECT 
+	active_daily_tracing_keys.interval_number AS interval_number,
+	active_daily_tracing_keys.daily_tracing_key AS daily_tracing_key,
+	active_daily_tracing_keys.submission_time AS submission_time,
+	active_daily_tracing_keys.retraction_time AS retraction_time 
+FROM 
+	active_daily_tracing_keys
+WHERE
+	retraction_time IS NULL;
+
+--	View to export all retracted keys
 	
---	View for all retracted keys
-	
+CREATE OR REPLACE VIEW view_retracted_keys AS
+SELECT
+	active_daily_tracing_keys.interval_number AS interval_number,
+	active_daily_tracing_keys.daily_tracing_key AS daily_tracing_key,
+	active_daily_tracing_keys.retraction_time AS retraction_time
+FROM 
+	active_daily_tracing_keys
+WHERE
+	active_daily_tracing_keys.retraction_time IS NOT NULL;
