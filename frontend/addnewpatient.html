@@ -1,81 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="stylesheet" type="text/css" href="style.css">
-<title>Add new COVID-19 patient</title>
+<link rel="stylesheet" type="text/css" href="style.css"/>
+<title>Add new patient</title>
 </head>
 <body>
 
-<div class="addnewpatient-title">
-<h1>Add new COVID-19 patient</h1>
+<div class="reset-page-title">
+<h1>Add new patient</h1>
 </div>
 
-<div class="addnewpatient-qr-code">
-<div class="addnewpatient-qr-code-title">
-<h2>QR Code</h2>
-</div>
-</div>
-
-<div class="addnewpatient-number-code">
-<div class="addnewpatient-number-code-title">
-<h2>Number Code</h2>
-</div>
-
-<div class="addnewpatient-number-code-block">
- <table id="number-code-table">
-  <tr>
-    <th>Code</th>
-    <th>Left</th>
-    <th>Right</th>
-  </tr>
-  <tr>
-    <td>1</td>
-    <td>123</td>
-    <td>456</td>
-  </tr>
-  <tr>
-    <td>2</td>
-    <td>123</td>
-    <td>456</td>
-  </tr>
-  <tr>
-    <td>3</td>
-    <td>123</td>
-    <td>456</td>
-  </tr>
-  <tr>
-    <td>4</td>
-    <td>123</td>
-    <td>456</td>
-  </tr>
-  <tr>
-    <td>5</td>
-    <td>123</td>
-    <td>456</td>
-  </tr>
-  <tr>
-    <td>6</td>
-    <td>123</td>
-    <td>456</td>
-  </tr>
-</table> 
-</div>
-
-</div>
-
-<div class="addnewpatient-sms-code">
-<div class="addnewpatient-sms-code-title">
-<h2>SMS Text Message Code</h2>
-</div>
-
-<form method="post">
-<div class="phonenumber">
-  <label for="phonenumber">Mobile phone number:</label><br>
-  <input type="tel" id="phonenumber" name="phonenumber" placeholder="06-12345678" pattern="[0][6]-[0-9]{8}" title="Use a Dutch phone number"><br/>
+<div class="form-addnewpatient-dates">
+<form method="post" action="addnewpatient.html">
+<div class="form-dates">  
+  <label for="startdate">Start of incubation period:</label><br>
+  <input type="date" id="startdate" name="startdate" title="Start of incubation period."><br/>
+  
+  <label for="enddate">End of infectuous period:</label><br>
+  <input type="date" id="enddate" name="enddate" title="End of infectuous period."><br/>
 </div>
 <br/>
-<div class="send-sms">
-    <input type="submit" value="Send SMS code">
+<div class="form-submit">
+    <input type="submit" value="Add">
 </div>
 </form>
 </div>
