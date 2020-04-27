@@ -1,0 +1,11 @@
+<?php
+
+$db_server = 'localhost';
+$db_user = 'healthcare_workers';
+$db_password = 'changeme';
+$db_port = '3306';
+$db_database = 'contact-tracing';
+
+require_once('mysql.php');
+
+?>
