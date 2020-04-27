@@ -21,7 +21,7 @@ function get_random_bytes_hex($length) {
 	}
 }
 
-function has_valid_session($db) {
+function get_session_information($db) {
 	// Validate cookie input.
 	if(isset($_COOKIE['healthcare_worker_uuid']) 
 		&& isset($_COOKIE['session_token'])
@@ -31,9 +31,14 @@ function has_valid_session($db) {
 		// Check if session is a valid session in the database.
 		$result = $db->has_active_healthcare_worker_session($_COOKIE['healthcare_worker_uuid'], $_COOKIE['session_token']);
 		
-		return (isset($result['query_succeeded']) && $result['query_succeeded']
-			&& isset($result['session_valid']) && $result['session_valid']);
+		return $result;
 	}
+}
+
+function has_valid_session($result) {	
+	return isset($result) && isset($result['query_succeeded'])
+		&& $result['query_succeeded'] && isset($result['session_valid'])
+		&& $result['session_valid'];
 }
 
 ?>

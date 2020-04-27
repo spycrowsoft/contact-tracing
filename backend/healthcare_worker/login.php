@@ -21,7 +21,7 @@ function is_valid_totp($candidate) {
 }
 
 // Check if the user has a valid session.
-if(has_valid_session($db)) {
+if(has_valid_session(get_session_information($db))) {
 	// Valid session found.
 	// Redirect to portal.
 	header("Location: portal.php", 303);
@@ -59,7 +59,7 @@ if(isset($_POST['username'])
 			setcookie('session_token', $session_token);
 			
 			// Redirect user to portal.
-			header("Location: healthworkerhome.php", 303);
+			header("Location: portal.php", 303);
 			exit();
 		}
 	}

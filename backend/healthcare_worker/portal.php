@@ -3,12 +3,15 @@
 require_once('util.php');
 
 // Check if the user has a valid session.
-if(!has_valid_session($db)) {
+$result = get_session_information($db);
+if(!has_valid_session($result)) {
 	// Valid session found.
 	// Redirect to portal.
 	header("Location: login.php", 303);
 	exit();
 }
+
+// Retrieve data from view_daily_tracing_key_submitted_by_healthcare_worker
 
 
 
@@ -27,7 +30,7 @@ if(!has_valid_session($db)) {
 </div>
 
 <div class="form" id="login-form">
-<form method="post" action="addnewpatient.html">
+<form method="post" action="addnewpatient.php">
 
 <div class="form-submit">
     <input type="submit" value="Add new positive COVID-19 patient">
@@ -35,12 +38,13 @@ if(!has_valid_session($db)) {
 </form>
 </div>
 
-<div class="retraction-table">
+<div class="Active-table">
  <table>
   <tr>
     <th>Retract?</th>
-    <th>Timestamp start</th>
-    <th>Timestamp end</th>
+    <th>Request time</th>
+    <th>Start date</th>
+    <th>Expiration date</th>
     <th>Day number</th>
   </tr>
   <tr>

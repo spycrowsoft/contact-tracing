@@ -113,11 +113,12 @@ CREATE TABLE IF NOT EXISTS healthcare_worker_sessions (
 );
 
 CREATE TABLE IF NOT EXISTS daily_tracing_key_activation_requests (
+	healthcare_worker_uuid VARCHAR(36) NOT NULL, -- UUID of healthcare_worker who made the activation request.	
 	request_uuid VARCHAR(36) NOT NULL DEFAULT UUID(), -- UUID of activation request.
-	healthcare_worker_uuid VARCHAR(36) NOT NULL, -- UUID of healthcare_worker who made the activation request.
-	valid_until TIMESTAMP NOT NULL DEFAULT DATE_ADD(NOW(), INTERVAL 14 DAY), -- Expiration timestamp of the healthcare_worker's session.
-	request_token VARCHAR(36) NOT NULL, -- Single use token which can be used to submit daily_tracing_keys.
 	creation_time TIMESTAMP NOT NULL DEFAULT NOW(), -- Time at which the request for daily_tracing_keys has been created.
+	start_date DATE NOT NULL DEFAULT DATE_SUB(NOW(), INTERVAL 14 DAY), -- Start time from which we want to accept dtks (beginning of incubation period).
+	expiration_date DATE NOT NULL DEFAULT DATE_ADD(NOW(), INTERVAL 14 DAY), -- Expiration timestamp of the healthcare_worker's request after which no new dtks will be accepted.
+	request_token VARCHAR(36) NOT NULL, -- Token which can be used by the app to submit daily_tracing_keys.	
 	PRIMARY KEY (request_uuid),
 	KEY (request_uuid, healthcare_worker_uuid),
 	KEY (creation_time),
@@ -126,9 +127,9 @@ CREATE TABLE IF NOT EXISTS daily_tracing_key_activation_requests (
 
 CREATE TABLE IF NOT EXISTS active_daily_tracing_keys (
 	request_uuid VARCHAR(36) NOT NULL, -- UUID of activation request.
+	received TIMESTAMP NOT NULL DEFAULT NOW(), -- Time at which the daily_tracing_key has been received.	
 	interval_number INTEGER UNSIGNED NOT NULL, -- Day number belonging to the daily_tracing_key.
 	daily_tracing_key BINARY(16) NOT NULL, -- daily_tracing_key.
-	received TIMESTAMP NOT NULL DEFAULT NOW(), -- Time at which the daily_tracing_key has been received.
 	PRIMARY KEY(request_uuid, interval_number, daily_tracing_key),
 	KEY (interval_number, daily_tracing_key),
 	FOREIGN KEY (request_uuid) REFERENCES daily_tracing_key_activation_requests(request_uuid) ON UPDATE CASCADE ON DELETE NO ACTION
@@ -156,7 +157,8 @@ SELECT
 	healthcare_workers.healthcare_worker_uuid AS healthcare_worker_uuid,
 	healthcare_worker_sessions.session_token AS session_token
 FROM
-	healthcare_workers, healthcare_worker_sessions
+	healthcare_workers,
+	healthcare_worker_sessions
 WHERE
 	healthcare_workers.healthcare_worker_uuid = healthcare_worker_sessions.healthcare_worker_uuid
 	AND healthcare_workers.totp_seed IS NOT NULL
@@ -170,19 +172,19 @@ WHERE
     
 --	View to show the healthcare_worker all daily_tracing_keys he or she has submitted.
 
-CREATE OR REPLACE VIEW view_daily_tracing_key_submitted_by_healthcare_workers AS
+CREATE OR REPLACE VIEW view_daily_tracing_key_submitted_by_healthcare_worker AS
 SELECT
-	healthcare_workers.username AS username,
-	dtkars.creation_time AS creation_time,
+	dtkars.healthcare_worker_uuid AS healthcare_worker_uuid,
+	dtkars.creation_time AS request_creation_time,
+	adtks.submission_time AS submission_time,
 	adtks.interval_number AS interval_number, 
 	adtks.daily_tracing_key AS daily_tracing_key
 FROM
-	healthcare_workers,
 	daily_tracing_key_activation_requests AS dtkars,
 	active_daily_tracing_keys AS adtks
 WHERE
-	healthcare_workers.healthcare_worker_uuid = dtkars.healthcare_worker_uuid
-	AND dtkars.request_uuid = adtks.request_uuid;
+	dtkars.request_uuid = adtks.request_uuid,
+	dtkars.expiration_date > NOW();
 
 --	View for the healthcare worker's login procedures
 
@@ -205,7 +207,6 @@ WHERE
 	AND healthcare_workers.account_expiration_date > NOW();
 
 --	View for all active keys
-
-
+	
 --	View for all retracted keys
-
+	
