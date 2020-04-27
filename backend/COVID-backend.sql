@@ -1,11 +1,11 @@
 
--- Note that everything in this file is a suggestion.
--- In other words: Nothing in this file is definitive.
+--	Note that everything in this file is a suggestion.
+--	In other words: Nothing in this file is definitive.
 
--- PoC MySQL database schema for use in the COVID-19 backend.
+--	PoC MySQL database schema for use in the COVID-19 backend.
 
--- DROP-section
--- Here for convenience during development.
+--	DROP-section
+--	Here for convenience during development.
 
 DROP VIEW IF EXISTS view_daily_tracing_key_submitted_by_healthcare_workers;
 DROP VIEW IF EXISTS view_healthcare_workers_sessions;
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS account_admins (
 	UNIQUE (phone_number)
 );
 
--- A table which keeps track of all account_admin logins
+--	A table which keeps track of all account_admin logins
 
 CREATE TABLE IF NOT EXISTS account_admin_sessions (
 	account_admin_uuid VARCHAR(36) NOT NULL, -- account_admin_uuid of session
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS account_admin_actions (
 CREATE TABLE IF NOT EXISTS healthcare_workers (
 	healthcare_worker_uuid VARCHAR(36) NOT NULL DEFAULT UUID(), -- Unique UUID of healthcare_worker.
 	username VARCHAR(32) NOT NULL, -- Unique username of healthcare_worker
-	hashed_password VARCHAR(64) NOT NULL, -- Salted password hash.
+	hashed_password VARCHAR(64) NULL DEFAULT NULL, -- Salted password hash.
 	salt VARCHAR(32) NOT NULL, -- healthcare_worker specific salt for password.
 	totp_seed VARCHAR(32) NULL DEFAULT NULL, -- healthcare_worker specific seed for HMAC-TOTP authentication.
 	email VARCHAR(255) NULL DEFAULT NULL, -- E-mail address of healthcare_worker.
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS healthcare_workers (
 	UNIQUE (phone_number)
 );
 
--- A table which keeps track of all heelthcare_worker logins
+--	A table which keeps track of all healthcare_worker logins
 
 CREATE TABLE IF NOT EXISTS healthcare_worker_sessions (
 	healthcare_worker_uuid VARCHAR(36) NOT NULL, -- healthcare_worker_uuid of session
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS daily_tracing_key_activation_requests (
 	healthcare_worker_uuid VARCHAR(36) NOT NULL, -- UUID of healthcare_worker who made the activation request.
 	valid_until TIMESTAMP NOT NULL DEFAULT DATE_ADD(NOW(), INTERVAL 14 DAY), -- Expiration timestamp of the healthcare_worker's session.
 	request_token VARCHAR(36) NOT NULL, -- Single use token which can be used to submit daily_tracing_keys.
-    creation_time TIMESTAMP NULL DEFAULT NOW(), -- Time at which the daily_tracing_keys have been created.
+	creation_time TIMESTAMP NOT NULL DEFAULT NOW(), -- Time at which the request for daily_tracing_keys has been created.
 	PRIMARY KEY (request_uuid),
 	KEY (request_uuid, healthcare_worker_uuid),
 	KEY (creation_time),
@@ -128,6 +128,7 @@ CREATE TABLE IF NOT EXISTS active_daily_tracing_keys (
 	request_uuid VARCHAR(36) NOT NULL, -- UUID of activation request.
 	interval_number INTEGER UNSIGNED NOT NULL, -- Day number belonging to the daily_tracing_key.
 	daily_tracing_key BINARY(16) NOT NULL, -- daily_tracing_key.
+	received TIMESTAMP NOT NULL DEFAULT NOW(), -- Time at which the daily_tracing_key has been received.
 	PRIMARY KEY(request_uuid, interval_number, daily_tracing_key),
 	KEY (interval_number, daily_tracing_key),
 	FOREIGN KEY (request_uuid) REFERENCES daily_tracing_key_activation_requests(request_uuid) ON UPDATE CASCADE ON DELETE NO ACTION
@@ -146,57 +147,65 @@ CREATE TABLE IF NOT EXISTS retracted_daily_tracing_keys (
 	FOREIGN KEY (activation_request_uuid) REFERENCES active_daily_tracing_keys(request_uuid) ON UPDATE CASCADE ON DELETE NO ACTION
 );
 
--- Views for use by application.
+--	Views for use by application.
 
--- View to be used to check if a healthcare_worker is currently logged in.
+--	View to be used to check if a healthcare_worker is currently logged in.
 
-CREATE OR REPLACE VIEW view_healthcare_workers_sessions AS
+CREATE OR REPLACE VIEW view_healthcare_workers_active_sessions AS
 SELECT 
 	healthcare_workers.healthcare_worker_uuid AS healthcare_worker_uuid,
-    healthcare_worker_sessions.session_token AS session_token
+	healthcare_worker_sessions.session_token AS session_token
 FROM
 	healthcare_workers, healthcare_worker_sessions
 WHERE
-	healthcare_workers.healthcare_worker_uuid = healthcare_worker_sessions.healthcare_worker_uuid AND
-    healthcare_workers.totp_seed IS NOT NULL AND
-    healthcare_workers.email IS NOT NULL AND
-    healthcare_workers.phone_number IS NOT NULL AND
-    healthcare_workers.reset_code IS NOT NULL AND
-    healthcare_workers.active IS TRUE AND
-    healthcare_worker_sessions.expiration_time > NOW() AND
-    healthcare_workers.account_expiration_date > NOW();
+	healthcare_workers.healthcare_worker_uuid = healthcare_worker_sessions.healthcare_worker_uuid
+	AND healthcare_workers.totp_seed IS NOT NULL
+	AND healthcare_workers.hashed_password IS NOT NULL
+	AND healthcare_workers.email IS NOT NULL
+	AND healthcare_workers.phone_number IS NOT NULL
+	AND healthcare_workers.reset_code IS NULL
+	AND healthcare_workers.active IS TRUE
+	AND healthcare_worker_sessions.expiration_time > NOW()
+	AND healthcare_workers.account_expiration_date > NOW();
     
--- View to show the healthcare_worker all daily_tracing_keys he or she has submitted.
+--	View to show the healthcare_worker all daily_tracing_keys he or she has submitted.
 
 CREATE OR REPLACE VIEW view_daily_tracing_key_submitted_by_healthcare_workers AS
 SELECT
 	healthcare_workers.username AS username,
 	dtkars.creation_time AS creation_time,
-	adtks.interval_number AS interval_number,
-    adtks.daily_tracing_key AS daily_tracing_key
+	adtks.interval_number AS interval_number, 
+	adtks.daily_tracing_key AS daily_tracing_key
 FROM
 	healthcare_workers,
 	daily_tracing_key_activation_requests AS dtkars,
-    active_daily_tracing_keys AS adtks
+	active_daily_tracing_keys AS adtks
 WHERE
-	healthcare_workers.healthcare_worker_uuid = dtkars.healthcare_worker_uuid AND
-    dtkars.request_uuid = adtks.request_uuid;
+	healthcare_workers.healthcare_worker_uuid = dtkars.healthcare_worker_uuid
+	AND dtkars.request_uuid = adtks.request_uuid;
 
--- View for the healthcare worker's login procedures
+--	View for the healthcare worker's login procedures
 
 CREATE OR REPLACE VIEW view_healthcare_workers_logins AS
 SELECT
-    healthcare_workers.healthcare_worker_uuid AS healthcare_worker_uuid,
-    healthcare_workers.username AS username,
-    healthcare_workers.hashed_password AS hashed_password,
-    healthcare_workers.totp_seed AS totp_seed
+	healthcare_workers.healthcare_worker_uuid AS healthcare_worker_uuid,
+	healthcare_workers.username AS username,
+	healthcare_workers.salt AS salt,
+	healthcare_workers.hashed_password AS hashed_password,
+	healthcare_workers.totp_seed AS totp_seed
 FROM 
 	healthcare_workers
 WHERE
-    healthcare_workers.totp_seed IS NOT NULL AND
-    healthcare_workers.email IS NOT NULL AND
-    healthcare_workers.phone_number IS NOT NULL AND
-    healthcare_workers.reset_code IS NOT NULL AND
-    healthcare_workers.active IS TRUE AND
-	healthcare_workers.account_expiration_date > NOW();
+	healthcare_workers.totp_seed IS NOT NULL
+	AND healthcare_workers.hashed_password IS NOT NULL
+	AND healthcare_workers.email IS NOT NULL
+	AND healthcare_workers.phone_number IS NOT NULL
+	AND healthcare_workers.reset_code IS NULL
+	AND healthcare_workers.active IS TRUE
+	AND healthcare_workers.account_expiration_date > NOW();
+
+--	View for all active keys
+
+
+--	View for all retracted keys
 
