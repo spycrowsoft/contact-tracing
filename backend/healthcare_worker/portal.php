@@ -5,7 +5,7 @@ require_once('util.php');
 // Check if the user has a valid session.
 $session_result = get_session_information($db);
 if(!has_valid_session($session_result)) {
-	// Valid session found.
+	// No valid session found.
 	// Redirect to portal.
 	header("Location: login.php", 303);
 	exit();
@@ -52,6 +52,14 @@ function print_active_keys_table_rows($table) {
 
 <div class="healthworker-home-title">
 <h1>Healthcare-worker Home</h1>
+</div>
+
+<div class="form-logout">
+<form method="post" action="logout.php">
+<div class="form-submit">
+    <input type="submit" value="Logout">
+</div>
+</form>
 </div>
 
 <div class="reset-page-title">

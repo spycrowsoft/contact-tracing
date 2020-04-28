@@ -5,7 +5,7 @@ require_once('util.php');
 // Check if the user has a valid session.
 $session_result = get_session_information($db);
 if(!has_valid_session($session_result)) {
-	// Valid session found.
+	// No valid session found.
 	// Redirect to portal.
 	header("Location: login.php", 303);
 	exit();
@@ -75,7 +75,15 @@ if(!isset($result) || !isset($result['submission_code_added'])
 <body>
 
 <div class="addnewpatient-title">
-<h1>Show activation code</h1>
+<h1>Show new activation code</h>
+</div>
+
+<div class="form-logout">
+<form method="post" action="logout.php">
+<div class="form-submit">
+    <input type="submit" value="Logout">
+</div>
+</form>
 </div>
 
 You can scan the QR-code or enter the number code.
