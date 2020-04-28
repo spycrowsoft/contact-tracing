@@ -28,6 +28,7 @@ class DatabaseConnection {
 		}
 	}
 	
+	// Conntect to database when required.
 	function connect_if_not_connected_yet() {
 		if(!isset($this->mysqli)) {
 			$this->mysqli = new mysqli(
@@ -45,6 +46,7 @@ class DatabaseConnection {
 		}
 	}
 	
+	// Check if an active session exists for a healthcare worker.
 	function has_active_healthcare_worker_session($healthcare_worker_uuid, $session_token) {
 		$this->connect_if_not_connected_yet();
 		
@@ -87,6 +89,7 @@ class DatabaseConnection {
 		return $return_values;
 	}
 	
+	// Terminate all active sessions for a healthcare worker.
 	function terminate_all_sessions_for_healtcare_worker($healthcare_worker_uuid) {
 		$this->connect_if_not_connected_yet();
 		
@@ -114,6 +117,7 @@ class DatabaseConnection {
 		return $return_values;
 	}
 	
+	// Create a new session for a healthcare worker.
 	function create_new_session($healthcare_worker_uuid, $session_token) {
 		$this->connect_if_not_connected_yet();
 		
@@ -142,6 +146,7 @@ class DatabaseConnection {
 		return $return_values;
 	}
 	
+	// Get login data for a healthcare worker.
 	function get_login_data($username) {
 		$this->connect_if_not_connected_yet();
 		
@@ -182,6 +187,144 @@ class DatabaseConnection {
 		$return_values['hashed_password'] = $row['hashed_password'];
 		$return_values['salt'] = $row['salt'];
 		$return_values['totp_seed'] = $row['totp_seed'];
+		
+		return $return_values;
+	}
+	
+	function get_active_daily_tracing_key_submitted_by_healthcare_worker($healthcare_worker_uuid) {
+		
+		$this->connect_if_not_connected_yet();
+		
+		$return_values['result_obtained'] = false;
+		
+		if(!($stmt = $this->mysqli->prepare("SELECT daily_tracing_key_uuid, request_creation_time, submission_time, interval_number FROM view_daily_tracing_key_submitted_by_healthcare_worker WHERE healthcare_worker_uuid = ? ORDER BY request_creation_time DESC, interval_number DESC"))) {
+			// Prepare failed.
+			$return_values['prepare_failed'] = true;
+			exit("Prepare failed: (" . $this->mysqli->errno . ") " . $this->mysqli->error);
+			return $return_values;
+		}
+		if(!$stmt->bind_param("s", $healthcare_worker_uuid)) {
+			// Binding parameters failed.
+			$return_values['bind_failed'] = true;
+			return $return_values;
+		}
+		if(!$stmt->execute()) {
+			// Execute failed.
+			$return_values['execute_failed'] = true;
+			return $return_values;
+		}
+		
+		$return_values['result_obtained'] = true;
+		
+		
+		$result_set = $stmt->get_result();
+		$active_keys_table = $result_set->fetch_all(MYSQLI_ASSOC);
+		
+		$return_values['active_keys_table'] = $active_keys_table;
+				
+		return $return_values;
+	}
+	
+	function retract_single_key_if_allowed($healthcare_worker_uuid, $daily_tracing_key_uuid) {
+		
+		$this->connect_if_not_connected_yet();
+		
+		$return_values['key_removed'] = false;
+		
+		if(!($stmt = $this->mysqli->prepare("SELECT daily_tracing_key_uuid FROM view_daily_tracing_key_submitted_by_healthcare_worker WHERE healthcare_worker_uuid = ? AND daily_tracing_key_uuid = ?"))) {
+			// Prepare failed.
+			$return_values['prepare_failed'] = true;
+			exit("Prepare failed: (" . $this->mysqli->errno . ") " . $this->mysqli->error);
+			return $return_values;
+		}
+		if(!$stmt->bind_param("ss", $healthcare_worker_uuid, $daily_tracing_key_uuid)) {
+			// Binding parameters failed.
+			$return_values['bind_failed'] = true;
+			return $return_values;
+		}
+		if(!$stmt->execute()) {
+			// Execute failed.
+			$return_values['execute_failed'] = true;
+			return $return_values;
+		}
+				
+		// Test if exactly one row was returned.
+		$result = $stmt->get_result();
+		if($result->num_rows != 1) {
+			// Login invalid.
+			return $return_values;
+		}
+		
+		// Set retraction time.
+		if(!($stmt = $this->mysqli->prepare("UPDATE active_daily_tracing_keys SET retraction_time = NOW() WHERE daily_tracing_key_uuid = ?"))) {
+			// Prepare failed.
+			$return_values['prepare_failed'] = true;
+			return $return_values;
+		}
+		if(!$stmt->bind_param("s", $daily_tracing_key_uuid)) {
+			// Binding parameters failed.
+			$return_values['bind_failed'] = true;
+			return $return_values;
+		}
+		if(!$stmt->execute()) {
+			// Execute failed.
+			$return_values['execute_failed'] = true;
+			return $return_values;
+		}
+		
+		$return_values['key_removed'] = true;
+		
+		return $return_values;
+	}
+	
+	function add_new_submission_request($healthcare_worker_uuid, $submission_code, $start_date, $end_date) {
+		$this->connect_if_not_connected_yet();
+		
+		$return_values['submission_code_added'] = false;
+		
+		// Build type, column and value strings and parameters array.
+		
+		$types = "ss";
+		$columns = "healthcare_worker_uuid, submission_code";
+		$values = "?, ?";
+		
+		$parameters = array($healthcare_worker_uuid, $submission_code);
+		
+		if(isset($start_date)) {
+			$types .= 's';
+			$columns .= ', start_date';
+			$values .= ', ?';
+			array_push($parameters, $start_date);
+		}
+		
+		if(isset($end_date)) {
+			$types .= 's';
+			$columns .= ', end_date';
+			$values .= ', ?';
+			array_push($parameters, $end_date);
+		}
+		
+		$query = "INSERT INTO daily_tracing_key_submission_requests (" . 
+			$columns . ") VALUES ( " . $values . " )";
+		
+		if(!($stmt = $this->mysqli->prepare($query))) {
+			// Prepare failed.
+			$return_values['prepare_failed'] = true;
+			exit("Prepare failed: (" . $this->mysqli->errno . ") " . $this->mysqli->error);
+			return $return_values;
+		}
+		if(!$stmt->bind_param($types, ...$parameters)) {
+			// Binding parameters failed.
+			$return_values['bind_failed'] = true;
+			return $return_values;
+		}
+		if(!$stmt->execute()) {
+			// Execute failed.
+			$return_values['execute_failed'] = true;
+			return $return_values;
+		}
+		
+		$return_values['submission_code_added'] = true;
 		
 		return $return_values;
 	}

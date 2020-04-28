@@ -21,6 +21,7 @@ function get_random_bytes_hex($length) {
 	}
 }
 
+// Retrieve session information from database.
 function get_session_information($db) {
 	// Validate cookie input.
 	if(isset($_COOKIE['healthcare_worker_uuid']) 
@@ -35,6 +36,7 @@ function get_session_information($db) {
 	}
 }
 
+// Condenses the output of get_session_information() to a simple boolean.
 function has_valid_session($result) {	
 	return isset($result) && isset($result['query_succeeded'])
 		&& $result['query_succeeded'] && isset($result['session_valid'])

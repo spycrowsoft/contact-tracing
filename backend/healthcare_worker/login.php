@@ -2,18 +2,21 @@
 
 require_once('util.php');
 
+// Regex and function to validate username format.
 define('username_regex', '^[\.0-9a-zA-Z]{6,32}$');
 
 function is_valid_username($candidate) {
 	return preg_match('/' . username_regex . '/', $candidate);
 }
 
+// Regex and function to validate password format.
 define('password_regex', '^[0-9a-zA-Z\ \.\?]{8,128}$');
 
 function is_valid_password($candidate) {
 	return preg_match('/' . password_regex . '/', $candidate);
 }
 
+// Regex and function to validate TOTP format.
 define('totp_regex', '^([0-9]{6}|[0-9]{8})$');
 
 function is_valid_totp($candidate) {
@@ -96,6 +99,7 @@ if(isset($_POST['username'])
 <div class="form-totp">
   <label for="totp">TOTP:</label><br>
   <input type="text" id="totp" name="totp" maxlength="6" pattern="<?php echo totp_regex; ?>" title="Six numbers" required><br/>
+  (not implemented yet)
 </div>  
 <br/>
 
@@ -110,7 +114,8 @@ if(isset($_POST['username'])
 <div class="form-resetaccess">
 <form method="post" action="resetaccess.html">
 <div class="form-reset-submit">
-    <input type="submit" value="I forgot my password/TOTP code.">
+    <input type="submit" value="I forgot my password or Authenticator code."><br/>
+     (not implemented yet, accepts any 6 digit code)
 </div>
 
 </form>
