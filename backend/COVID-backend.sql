@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS daily_tracing_key_submission_requests (
 	KEY (healthcare_worker_uuid, request_uuid),
 	KEY (healthcare_worker_uuid, creation_time),
 	KEY (creation_time),
+	CHECK (end_date <= DATE_ADD(NOW(), INTERVAL 46 DAY)), -- Ensure that keys cannot be submitted beyond a into the future. 
 	FOREIGN KEY (healthcare_worker_uuid) REFERENCES healthcare_workers(healthcare_worker_uuid) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
