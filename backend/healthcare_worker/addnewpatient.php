@@ -71,6 +71,10 @@ if(!isset($result) || !isset($result['submission_code_added'])
 <head>
 <link rel="stylesheet" type="text/css" href="style.css">
 <title>Show activation code</title>
+
+<script type="text/javascript" src="qrcodejs/jquery.min.js"></script>
+<script type="text/javascript" src="qrcodejs/qrcode.min.js"></script>
+
 </head>
 <body>
 
@@ -91,7 +95,19 @@ You can scan the QR-code or enter the number code.
 <div class="addnewpatient-qr-code">
 <div class="addnewpatient-qr-code-title">
 <h2>QR Code</h2>
-To be implemented.
+
+<div id="qrcode" style="width:430px; height:430px; margin:15px;"></div>
+<script type="text/javascript">
+new QRCode("qrcode", {
+    text: "<?php echo $submission_code ?>",
+    width: 400,
+    height: 400,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+});
+</script>
+
 </div>
 </div>
 
