@@ -122,7 +122,9 @@ CREATE TABLE IF NOT EXISTS daily_tracing_key_submission_requests (
 	KEY (healthcare_worker_uuid, request_uuid),
 	KEY (healthcare_worker_uuid, creation_time),
 	KEY (creation_time),
-	CHECK (end_date <= DATE_ADD(NOW(), INTERVAL 46 DAY)), -- Ensure that keys cannot be submitted beyond a into the future. 
+	CHECK (end_date <= DATE_ADD(NOW(), INTERVAL 46 DAY)), -- Ensure that keys cannot be submitted beyond a into the future.
+	CHECK (submission_code <> "000000000000000000000000000000000000"), -- Code with all zeros can be used for dummy-requests by phones, so we should not allow that one.
+	UNIQUE (submission_code, creation_time),
 	FOREIGN KEY (healthcare_worker_uuid) REFERENCES healthcare_workers(healthcare_worker_uuid) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
