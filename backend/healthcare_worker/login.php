@@ -99,7 +99,7 @@ if(isset($_POST['username'])
 <div class="form-totp">
   <label for="totp">TOTP:</label><br>
   <input type="text" id="totp" name="totp" maxlength="6" pattern="<?php echo totp_regex; ?>" title="Six numbers" required><br/>
-  (not implemented yet)
+  (not implemented yet, accepts any 6 digit code)
 </div>  
 <br/>
 
@@ -115,7 +115,7 @@ if(isset($_POST['username'])
 <form method="post" action="resetaccess.html">
 <div class="form-reset-submit">
     <input type="submit" value="I forgot my password or Authenticator code."><br/>
-     (not implemented yet, accepts any 6 digit code)
+     (not implemented yet)
 </div>
 
 </form>

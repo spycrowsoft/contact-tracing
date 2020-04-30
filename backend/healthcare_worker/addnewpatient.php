@@ -77,6 +77,8 @@ if(!isset($result) || !isset($result['submission_code_added'])
 
 </head>
 <body>
+<div class="body" id="div-body">
+
 
 <div class="addnewpatient-title">
 <h1>Show new activation code</h>
@@ -150,5 +152,6 @@ new QRCode("qrcode", {
 </form>
 </div>
 
+</div>
 </body>
 </html>
