@@ -30,12 +30,12 @@ function print_active_keys_table_rows($table) {
 		$result .= '<tr>';
 		
 		// For retraction.
-		$result .= '<td><form action="retract.php" method="post"><input type="hidden" name="daily_tracing_key_uuid" value="' . $row['daily_tracing_key_uuid'] . '" /><button>Retract</button></form></td>';
+		$result .= '<td><form action="retract.php" method="post"><input type="hidden" name="daily_tracing_key_uuid" value="' . htmlentities($row['daily_tracing_key_uuid']) . '" /><button>Retract</button></form></td>';
 		
 		// Remaining data.
-		$result .= '<td>' . $row['request_creation_time'] . '</td>';
-		$result .= '<td>' . $row['submission_time'] . '</td>';
-		$result .= '<td>' . $row['interval_number'] . '</td>';
+		$result .= '<td>' . htmlentities($row['request_creation_time']) . '</td>';
+		$result .= '<td>' . htmlentities($row['submission_time']) . '</td>';
+		$result .= '<td>' . htmlentities($row['interval_number']) . '</td>';
 		$result .= '</tr>' . "\r\n";
 	}
 	return $result;
