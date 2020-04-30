@@ -79,9 +79,10 @@ if(isset($_POST['username'])
 </head>
 <body>
 
-<div class="login-page-title">
-<h1>Login Contact Tracing Health-worker Portal</h1>
-</div>
+<header>
+	<div class="logo">Rijksoverheid-logo</div>
+	<div class="title">Healthcare worker Login</div>
+</header>
 
 <div class="form" id="login-form">
 <form method="post" action="login.php">

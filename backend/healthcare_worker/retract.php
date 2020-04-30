@@ -32,13 +32,14 @@ if(isset($result) && isset($result['key_removed'])
 <html lang="en">
 <head>
 <link rel="stylesheet" type="text/css" href="style.css">
-<title>Health-worker Home</title>
+<title>Retract a key</title>
 </head>
 <body>
 
-<div class="healthworker-home-title">
-<h1>Health-worker Home</h1>
-</div>
+<header>
+	<div class="logo">Rijksoverheid-logo</div>
+	<div class="title">Retract a key</div>
+</header>
 
 <div class="form-logout">
 <form method="post" action="logout.php">

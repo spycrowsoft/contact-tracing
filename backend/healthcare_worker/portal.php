@@ -50,9 +50,10 @@ function print_active_keys_table_rows($table) {
 </head>
 <body>
 
-<div class="healthworker-home-title">
-<h1>Healthcare-worker Home</h1>
-</div>
+<header>
+	<div class="logo">Rijksoverheid-logo</div>
+	<div class="title">Healthcare-worker Home</div>
+</header>
 
 <div class="form-logout">
 <form method="post" action="logout.php">
