@@ -77,12 +77,13 @@ if(!isset($result) || !isset($result['submission_code_added'])
 
 </head>
 <body>
+
 <div class="body" id="div-body">
 
-
-<div class="addnewpatient-title">
-<h1>Show new activation code</h>
-</div>
+<header>
+	<div class="logo">Rijksoverheid-logo</div>
+	<div class="title">Show activation code</div>
+</header>
 
 <div class="form-logout">
 <form method="post" action="logout.php">
