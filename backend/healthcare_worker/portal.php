@@ -70,10 +70,10 @@ function print_active_keys_table_rows($table) {
 <div class="form-addnewpatient-dates">
 <form method="post" action="addnewpatient.php">
 <div class="form-dates">  
-  <label for="startdate">Start of incubation period:</label><br>
+  <label for="start_date">Start of incubation period:</label><br>
   <input type="date" id="start_date" name="start_date" title="Start of incubation period."><br/>
   
-  <label for="enddate">End of infectuous period:</label><br>
+  <label for="end_date">End of infectuous period:</label><br>
   <input type="date" id="end_date" name="end_date" title="End of infectuous period."><br/>
 </div>
 <br/>
