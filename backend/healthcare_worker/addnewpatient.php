@@ -16,15 +16,6 @@ function is_date($candidate) {
 	return preg_match("/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/", $candidate);
 }
 
-// Create a human friendly random number code.
-function generate_submission_code() {
-	$submission_code = '';
-	for($i=0; $i<18; $i++) {
-		$submission_code .= str_pad(strval(hexdec(get_random_bytes_hex(2)) % 100), 2, '0', STR_PAD_LEFT);
-	}
-	return $submission_code;
-}
-
 // Prints the submission_code_table.
 function print_submission_code_table($submission_code) {
 	$result = '<table id="number-code-table">' . "\r\n";
@@ -39,7 +30,7 @@ function print_submission_code_table($submission_code) {
 }
 
 // Generate submission code.
-$submission_code = generate_submission_code();
+$submission_code = generate_token_code();
 
 if(isset($_POST['start_date']) && is_date($_POST['start_date'])) {
 	$start_date = $_POST['start_date'];

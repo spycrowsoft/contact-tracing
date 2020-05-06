@@ -328,6 +328,33 @@ class DatabaseConnection {
 		
 		return $return_values;
 	}
+	
+	function set_reset_code($username, $email, $token_code) {
+		$this->connect_if_not_connected_yet();
+		
+		// Query to see if (uuid, session_id) combination exists.
+		$return_values['account_reset_requested'] = false;
+		
+		if(!($stmt = $this->mysqli->prepare("UPDATE healthcare_workers SET reset_code = ? WHERE username = ? AND email = ?"))) {
+			// Prepare failed.
+			$return_values['prepare_failed'] = true;
+			return $return_values;
+		}
+		if(!$stmt->bind_param("sss", $token_code, $username, $email)) {
+			// Binding parameters failed.
+			$return_values['bind_failed'] = true;
+			return $return_values;
+		}
+		if(!$stmt->execute()) {
+			// Execute failed.
+			$return_values['execute_failed'] = true;
+			return $return_values;
+		}
+		
+		$return_values['account_reset_requested'] = true;
+		
+		return $return_values;
+	}
 }
 
 $db = new DatabaseConnection($db_server, $db_user, $db_password, $db_database, $db_port);

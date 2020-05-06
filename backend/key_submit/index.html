@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+<title>.....</title>
+</head>
+<body>
+
+<header>
+	<div class="logo">Rijksoverheid-logo</div>
+	<div class="title">....</div>
+</header>
+
+<div class="form" id="code-form">
+<form method="post" action="submit.php">
+
+<div class="form-submissioncode">
+  <label for="submission_code">Submission code:</label><br>
+  <input type="text" id="submission_code" name="submission_code" pattern="^[0-9]{36}$" required><br/>
+</div>
+
+<div class="form-keys">  
+  <label for="keys_input_hex">Keys input HEX:</label><br>
+  <input type="text" id="keys_input_hex" name="keys_input_hex" pattern="^([0-9a-fA-F]{40}){1,30}$" required><br/>
+</div>
+  
+<br/>
+
+<div class="form-submit">
+    <input type="submit" value="Submit">
+</div>
+
+</form>
+</div>
+
+</body>
+</html>

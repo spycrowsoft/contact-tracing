@@ -170,20 +170,20 @@ WHERE
 
 CREATE OR REPLACE VIEW view_daily_tracing_key_submitted_by_healthcare_worker AS
 SELECT
-	dtkars.healthcare_worker_uuid AS healthcare_worker_uuid,
-	dtkars.creation_time AS request_creation_time,
+	dtksrs.healthcare_worker_uuid AS healthcare_worker_uuid,
+	dtksrs.creation_time AS request_creation_time,
 	adtks.submission_time AS submission_time,
 	adtks.daily_tracing_key_uuid AS daily_tracing_key_uuid,
 	adtks.interval_number AS interval_number, 
 	adtks.daily_tracing_key AS daily_tracing_key,
 	adtks.retraction_time AS retraction_time
 FROM
-	daily_tracing_key_submission_requests AS dtkars,
+	daily_tracing_key_submission_requests AS dtksrs,
 	active_daily_tracing_keys AS adtks
 WHERE
-	dtkars.request_uuid = adtks.request_uuid
+	dtksrs.request_uuid = adtks.request_uuid
 	AND retraction_time IS NULL
-	AND dtkars.end_date > NOW();
+	AND dtksrs.end_date > NOW();
 
 --	View for the healthcare worker's login procedures
 
@@ -216,7 +216,9 @@ SELECT
 FROM 
 	active_daily_tracing_keys
 WHERE
-	retraction_time IS NULL;
+	retraction_time IS NULL
+	AND submission_time < DATE_SUB(NOW(), INTERVAL 1 DAY)
+ORDER BY interval_number ASC, daily_tracing_key ASC;
 
 --	View to export all retracted keys
 	
@@ -228,4 +230,18 @@ SELECT
 FROM 
 	active_daily_tracing_keys
 WHERE
-	active_daily_tracing_keys.retraction_time IS NOT NULL;
+	active_daily_tracing_keys.retraction_time IS NOT NULL
+	AND submission_time < DATE_SUB(NOW(), INTERVAL 1 DAY)
+ORDER BY interval_number ASC, daily_tracing_key ASC;
+
+-- View to check if a submission code is valid for key-submission.
+
+CREATE OR REPLACE VIEW view_key_submission_allowed AS
+SELECT
+	request_uuid,
+	submission_code
+FROM
+	daily_tracing_key_submission_requests
+WHERE
+	daily_tracing_key_submission_requests.end_date > NOW();
+

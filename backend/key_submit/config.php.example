@@ -1,12 +1,10 @@
 <?php
 
 $db_server = 'localhost';
-$db_user = 'healthcare_workers';
+$db_user = 'key_submit';
 $db_password = 'changeme';
 $db_port = '3306';
 $db_database = 'contact-tracing';
-
-$from_email = 'mail@example.com';
 
 require_once('mysql.php');
 

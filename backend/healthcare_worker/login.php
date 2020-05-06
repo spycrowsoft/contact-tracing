@@ -2,27 +2,6 @@
 
 require_once('util.php');
 
-// Regex and function to validate username format.
-define('username_regex', '^[\.0-9a-zA-Z]{6,32}$');
-
-function is_valid_username($candidate) {
-	return preg_match('/' . username_regex . '/', $candidate);
-}
-
-// Regex and function to validate password format.
-define('password_regex', '^[0-9a-zA-Z\ \.\?]{8,128}$');
-
-function is_valid_password($candidate) {
-	return preg_match('/' . password_regex . '/', $candidate);
-}
-
-// Regex and function to validate TOTP format.
-define('totp_regex', '^([0-9]{6}|[0-9]{8})$');
-
-function is_valid_totp($candidate) {
-	return preg_match('/' . totp_regex . '/', $candidate);
-}
-
 // Check if the user has a valid session.
 if(has_valid_session(get_session_information($db))) {
 	// Valid session found.
@@ -113,7 +92,7 @@ if(isset($_POST['username'])
 <p>
 
 <div class="form-resetaccess">
-<form method="post" action="resetaccess.html">
+<form method="post" action="requestreset.php">
 <div class="form-reset-submit">
     <input type="submit" value="I forgot my password or Authenticator code."><br/>
      (not implemented yet)
