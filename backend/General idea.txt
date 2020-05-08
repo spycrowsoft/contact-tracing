@@ -26,8 +26,8 @@ A healthcare_worker can:
 -	Log out.
 
 A mobile app can:
--	Submit a range of daily tracing keys ONCE by using a token-code
-	provided by a healthcare worker.
+-	Submit a range of daily tracing keys within a time interval defined by a 
+	healthcare worker by using a token-code	provided by a healthcare worker.
 
 Before the webserver returns a "200 OK", the web application stores
 the data it receives in:
@@ -40,17 +40,15 @@ If either one fails, the server returns a 503 error code so the client
 is aware that its request could not be handled at this point in time.
 
 The information in the database is then used to generate a static set of
-key files with file-format YMMDDHH-NNNNN.gz, which contains a GZip 
+key files with file-format YMMDDHH.gz, which contains a GZip 
 compressed concatenation of all daily tracing keys we have received in a 
 given time interval.
 
 For example:
-The file 0041311-18365.gz will contain all daily tracing keys with 
-day-number 18365, which corresponds with the time interval between
-2020-04-13T14:03:53+00:00 and 2020-04-13T14:04:29+00:00 that we have 
-received between 2020-04-13T10:00:00+00:00 and 2020-04-13T11:00:00+00:00.
+The file 0041311.gz will contain all daily tracing keys received within that
+marked interval.
 
-The time format used is defined in ISO 8601.
+The time format is used for illustration and is defined in ISO 8601.
 
 We use this file format in 2 directories named "active" and "retracted".
 
@@ -64,7 +62,7 @@ uploaded wrongfully which means that it should not be treated as
 belonging to a person infected with COVID-19 at the time interval 
 specified by the day number.
 
-Once every hour a relatively simple program connects to the database to 
+Periodically a relatively simple program connects to the database to 
 generate new files with dtks and places them in the active and retracted
 folders for distribution.
 

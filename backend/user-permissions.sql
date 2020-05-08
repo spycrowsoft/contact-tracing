@@ -13,8 +13,6 @@ GRANT Insert ON `contact-tracing`.daily_tracing_key_submission_requests TO 'heal
 CREATE USER 'healthcare_workers'@'localhost';
 FLUSH PRIVILEGES;
 
-
-
 -- Create user for key submission and grant most restricted priviliges.
 CREATE USER 'key_submit'@'localhost' IDENTIFIED BY 'password';
 GRANT Select ON `contact-tracing`.view_key_submission_allowed TO 'key_submit'@'localhost';

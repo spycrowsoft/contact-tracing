@@ -89,6 +89,7 @@ You can scan the QR-code or enter the number code.
 <div class="addnewpatient-qr-code">
 <div class="addnewpatient-qr-code-title">
 <h2>QR Code</h2>
+</div>
 
 <div id="qrcode" style="width:430px; height:430px; margin:15px;"></div>
 <script type="text/javascript">
@@ -101,17 +102,20 @@ new QRCode("qrcode", {
     correctLevel : QRCode.CorrectLevel.H
 });
 </script>
-
-</div>
 </div>
 
 <div class="addnewpatient-number-code">
+
 <div class="addnewpatient-number-code-title">
 <h2>Number Code</h2>
 </div>
 
 <div class="addnewpatient-number-code-block">
 <?php echo print_submission_code_table($submission_code); ?>
+</div>
+
+<div class="addnewpatient-number-code-numbers">
+<?php echo $submission_code; ?>
 </div>
 
 </div>
